@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description"
+        content="AI-powered used car price estimator. Enter your car details and get an instant resale value prediction." />
+  <title>Car Price Predictor | AI-Powered Resale Estimator</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Local Stylesheet -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+
+<body>
+
+  <!-- ═══════════════════ ANIMATED BACKGROUND ═══════════════════ -->
+  <div class="bg-gradient" aria-hidden="true"></div>
+  <div class="floating-shapes" aria-hidden="true">
+    <span class="shape shape-1"></span>
+    <span class="shape shape-2"></span>
+    <span class="shape shape-3"></span>
+    <span class="shape shape-4"></span>
+    <span class="shape shape-5"></span>
+  </div>
+
+  <!-- ═══════════════════ HEADER / HERO ═════════════════════════ -->
+  <header class="hero">
+    <div class="hero-badge">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+      </svg>
+      Machine Learning Powered
+    </div>
+    <h1 class="hero-title">Car Price <span class="gradient-text">Predictor</span></h1>
+    <p class="hero-subtitle">
+      Get an instant, AI-driven estimate of your used car's resale value.<br />
+      Powered by a tuned Random Forest model trained on real market data.
+    </p>
+
+    <!-- Stats bar -->
+    <div class="stats-bar" role="list">
+      <div class="stat" role="listitem">
+        <span class="stat-value" id="stat-accuracy">95%+</span>
+        <span class="stat-label">Accuracy</span>
+      </div>
+      <div class="stat-divider" aria-hidden="true"></div>
+      <div class="stat" role="listitem">
+        <span class="stat-value">300+</span>
+        <span class="stat-label">Training Samples</span>
+      </div>
+      <div class="stat-divider" aria-hidden="true"></div>
+      <div class="stat" role="listitem">
+        <span class="stat-value">7</span>
+        <span class="stat-label">Input Features</span>
+      </div>
+      <div class="stat-divider" aria-hidden="true"></div>
+      <div class="stat" role="listitem">
+        <span class="stat-value">4</span>
+        <span class="stat-label">Models Compared</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══════════════════ MAIN CONTENT ══════════════════════════ -->
+  <main class="main-content">
+
+    <!-- ─── Flash Messages ─────────────────────────────────── -->
+    {% if error %}
+    <div class="alert alert-error" role="alert" id="alert-error">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      {{ error }}
+      <button class="alert-close" onclick="this.parentElement.remove()" aria-label="Close alert">×</button>
+    </div>
+    {% endif %}
+
+    <!-- ─── Two-column Layout ──────────────────────────────── -->
+    <div class="layout">
+
+      <!-- ══ LEFT COLUMN — Prediction Form ══════════════════ -->
+      <section class="card form-card" aria-labelledby="form-heading">
+        <div class="card-header">
+          <div class="card-icon" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 4v4h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+            </svg>
+          </div>
+          <h2 id="form-heading">Enter Car Details</h2>
+        </div>
+
+        <form id="prediction-form" action="/predict" method="POST" novalidate>
+
+          <!-- Row 1 -->
+          <div class="form-row">
+            <!-- Showroom Price -->
+            <div class="form-group" id="group-present-price">
+              <label for="present_price" class="form-label">
+                Showroom Price
+                <span class="label-unit">(₹ Lakhs)</span>
+              </label>
+              <div class="input-wrapper">
+                <span class="input-icon" aria-hidden="true">₹</span>
+                <input
+                  type="number"
+                  id="present_price"
+                  name="present_price"
+                  class="form-input"
+                  placeholder="e.g. 9.85"
+                  step="0.01"
+                  min="0.5"
+                  max="200"
+                  value="{{ prediction.inputs.present_price if prediction else '' }}"
+                  required
+                  aria-describedby="tip-present-price"
+                />
+              </div>
+              <p class="input-tip" id="tip-present-price">Current ex-showroom price of the car model</p>
+              <p class="field-error" id="err-present-price" role="alert"></p>
+            </div>
+
+            <!-- Car Age -->
+            <div class="form-group" id="group-car-age">
+              <label for="car_age" class="form-label">
+                Car Age
+                <span class="label-unit">(Years)</span>
+              </label>
+              <div class="input-wrapper">
+                <span class="input-icon" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                  </svg>
+                </span>
+                <input
+                  type="number"
+                  id="car_age"
+                  name="car_age"
+                  class="form-input"
+                  placeholder="e.g. 5"
+                  min="0"
+                  max="50"
+                  value="{{ prediction.inputs.car_age if prediction else '' }}"
+                  required
+                  aria-describedby="tip-car-age"
+                />
+              </div>
+              <p class="input-tip" id="tip-car-age">Current Year − Manufacture Year</p>
+              <p class="field-error" id="err-car-age" role="alert"></p>
+            </div>
+          </div>
+
+          <!-- Row 2 -->
+          <div class="form-row">
+            <!-- Kms Driven -->
+            <div class="form-group" id="group-kms">
+              <label for="kms_driven" class="form-label">
+                Kilometres Driven
+                <span class="label-unit">(km)</span>
+              </label>
+              <div class="input-wrapper">
+                <span class="input-icon" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="12" x2="14.5" y2="14.5"/>
+                  </svg>
+                </span>
+                <input
+                  type="number"
+                  id="kms_driven"
+                  name="kms_driven"
+                  class="form-input"
+                  placeholder="e.g. 45000"
+                  min="0"
+                  value="{{ prediction.inputs.kms_driven if prediction else '' }}"
+                  required
+                  aria-describedby="tip-kms"
+                />
+              </div>
+              <p class="input-tip" id="tip-kms">Total odometer reading</p>
+              <p class="field-error" id="err-kms" role="alert"></p>
+            </div>
+
+            <!-- Owner -->
+            <div class="form-group" id="group-owner">
+              <label for="owner" class="form-label">Previous Owners</label>
+              <div class="input-wrapper">
+                <span class="input-icon" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                  </svg>
+                </span>
+                <select id="owner" name="owner" class="form-input form-select" required>
+                  <option value="" disabled {% if not prediction %}selected{% endif %}>Select…</option>
+                  {% for i in range(4) %}
+                  <option value="{{ i }}" {% if prediction and prediction.inputs.owner == i %}selected{% endif %}>
+                    {{ i }} — {{ "First Owner" if i == 0 else (i|string + " Previous Owner" + ("s" if i > 1 else "")) }}
+                  </option>
+                  {% endfor %}
+                </select>
+              </div>
+              <p class="field-error" id="err-owner" role="alert"></p>
+            </div>
+          </div>
+
+          <!-- Row 3 — Categorical fields -->
+          <div class="form-row form-row-3">
+
+            <!-- Fuel Type -->
+            <div class="form-group" id="group-fuel">
+              <label class="form-label">Fuel Type</label>
+              <div class="chip-group" role="radiogroup" aria-labelledby="label-fuel">
+                {% for fuel in ["Petrol", "Diesel", "CNG"] %}
+                <label class="chip {% if prediction and prediction.inputs.fuel_type == fuel %}chip-active{% endif %}"
+                       id="chip-fuel-{{ fuel|lower }}">
+                  <input type="radio" name="fuel_type" value="{{ fuel }}"
+                    {% if prediction and prediction.inputs.fuel_type == fuel %}checked{% endif %}
+                    {% if not prediction and fuel == "Petrol" %}checked{% endif %}
+                    required />
+                  {{ fuel }}
+                </label>
+                {% endfor %}
+              </div>
+              <p class="field-error" id="err-fuel" role="alert"></p>
+            </div>
+
+            <!-- Seller Type -->
+            <div class="form-group" id="group-seller">
+              <label class="form-label">Seller Type</label>
+              <div class="chip-group" role="radiogroup" aria-labelledby="label-seller">
+                {% for st in ["Dealer", "Individual"] %}
+                <label class="chip {% if prediction and prediction.inputs.seller_type == st %}chip-active{% endif %}"
+                       id="chip-seller-{{ st|lower }}">
+                  <input type="radio" name="seller_type" value="{{ st }}"
+                    {% if prediction and prediction.inputs.seller_type == st %}checked{% endif %}
+                    {% if not prediction and st == "Dealer" %}checked{% endif %}
+                    required />
+                  {{ st }}
+                </label>
+                {% endfor %}
+              </div>
+              <p class="field-error" id="err-seller" role="alert"></p>
+            </div>
+
+            <!-- Transmission -->
+            <div class="form-group" id="group-trans">
+              <label class="form-label">Transmission</label>
+              <div class="chip-group" role="radiogroup" aria-labelledby="label-trans">
+                {% for tr in ["Manual", "Automatic"] %}
+                <label class="chip {% if prediction and prediction.inputs.transmission == tr %}chip-active{% endif %}"
+                       id="chip-trans-{{ tr|lower }}">
+                  <input type="radio" name="transmission" value="{{ tr }}"
+                    {% if prediction and prediction.inputs.transmission == tr %}checked{% endif %}
+                    {% if not prediction and tr == "Manual" %}checked{% endif %}
+                    required />
+                  {{ tr }}
+                </label>
+                {% endfor %}
+              </div>
+              <p class="field-error" id="err-trans" role="alert"></p>
+            </div>
+
+          </div>
+
+          <!-- Submit -->
+          <button type="submit" id="predict-btn" class="btn-predict">
+            <span class="btn-text">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
+              Predict Selling Price
+            </span>
+            <span class="btn-loader" aria-hidden="true"></span>
+          </button>
+
+        </form>
+      </section><!-- end form-card -->
+
+      <!-- ══ RIGHT COLUMN — Result + Info ════════════════════ -->
+      <aside class="right-column">
+
+        <!-- ── Prediction Result Card ───────────────────────── -->
+        {% if prediction %}
+        <div class="result-card" id="result-card" role="region" aria-label="Prediction result" aria-live="polite">
+          <div class="result-badge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+            AI Estimate
+          </div>
+          <p class="result-label">Estimated Selling Price</p>
+          <div class="result-price-wrapper" aria-label="Predicted price">
+            <span class="result-currency">₹</span>
+            <span class="result-value" id="result-value">{{ prediction.price }}</span>
+            <span class="result-unit">Lakhs</span>
+          </div>
+          <p class="result-note">
+            Based on {{ prediction.inputs.fuel_type }} ·
+            {{ prediction.inputs.seller_type }} ·
+            {{ prediction.inputs.transmission }} ·
+            {{ prediction.inputs.car_age }} yr old ·
+            {{ "{:,.0f}".format(prediction.inputs.kms_driven) }} km
+          </p>
+
+          <!-- Confidence bar -->
+          <div class="confidence-bar" aria-label="Model confidence">
+            <div class="confidence-label">
+              <span>Model Confidence</span>
+              <span class="confidence-val">High</span>
+            </div>
+            <div class="confidence-track" role="progressbar" aria-valuenow="92" aria-valuemin="0" aria-valuemax="100">
+              <div class="confidence-fill" style="width: 92%"></div>
+            </div>
+          </div>
+
+          <button class="btn-reset" onclick="window.location.href='/'">
+            ← Predict Another Car
+          </button>
+        </div>
+        {% else %}
+        <!-- Placeholder when no prediction yet -->
+        <div class="result-card result-placeholder" id="result-placeholder" aria-label="Prediction result area">
+          <div class="placeholder-icon" aria-hidden="true">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+              <rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 4v4h-7V8z"/>
+              <circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+            </svg>
+          </div>
+          <h3 class="placeholder-title">Your Estimate Appears Here</h3>
+          <p class="placeholder-text">
+            Fill in the car details on the left and click<br />
+            <strong>Predict Selling Price</strong> to get an instant estimate.
+          </p>
+        </div>
+        {% endif %}
+
+        <!-- ── How It Works Card ─────────────────────────────── -->
+        <div class="info-card" aria-labelledby="how-heading">
+          <h3 id="how-heading" class="info-card-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            How It Works
+          </h3>
+          <ol class="how-list">
+            <li>
+              <span class="step-num">01</span>
+              <span>Enter your car's showroom price, age, and mileage.</span>
+            </li>
+            <li>
+              <span class="step-num">02</span>
+              <span>Select fuel type, seller type, and transmission.</span>
+            </li>
+            <li>
+              <span class="step-num">03</span>
+              <span>Our Random Forest model analyses all 7 features.</span>
+            </li>
+            <li>
+              <span class="step-num">04</span>
+              <span>Receive an instant estimated selling price in ₹ Lakhs.</span>
+            </li>
+          </ol>
+        </div>
+
+        <!-- ── Model Info Card ─────────────────────────────── -->
+        <div class="info-card" aria-labelledby="model-heading">
+          <h3 id="model-heading" class="info-card-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+            Model Details
+          </h3>
+          <ul class="model-details-list">
+            <li><span class="detail-label">Algorithm</span><span class="detail-val">Random Forest Regressor</span></li>
+            <li><span class="detail-label">Tuning</span><span class="detail-val">RandomizedSearchCV (40 iter)</span></li>
+            <li><span class="detail-label">Cross-Validation</span><span class="detail-val">5-fold CV</span></li>
+            <li><span class="detail-label">Key Feature</span><span class="detail-val">Present Price (~55%)</span></li>
+            <li><span class="detail-label">Train / Test</span><span class="detail-val">80% / 20%</span></li>
+          </ul>
+        </div>
+
+      </aside><!-- end right-column -->
+    </div><!-- end layout -->
+  </main>
+
+  <!-- ═══════════════════ FOOTER ════════════════════════════════ -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 4v4h-7V8z"/>
+          <circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+        </svg>
+        <span>Car Price Predictor</span>
+      </div>
+      <p class="footer-text">
+        Built with Python · scikit-learn · Flask · HTML/CSS
+      </p>
+      <p class="footer-disclaimer">
+        Predictions are estimates based on training data and should not be treated as definitive market valuations.
+      </p>
+    </div>
+  </footer>
+
+  <!-- ═══════════════════ JAVASCRIPT ════════════════════════════ -->
+  <script>
+    // ── Chip Radio Buttons — visual active state ─────────────
+    document.querySelectorAll('.chip input[type="radio"]').forEach(radio => {
+      radio.addEventListener('change', () => {
+        // Remove active from all chips in the same group
+        const name = radio.name;
+        document.querySelectorAll(`.chip input[name="${name}"]`).forEach(r => {
+          r.closest('.chip').classList.remove('chip-active');
+        });
+        radio.closest('.chip').classList.add('chip-active');
+      });
+    });
+
+    // ── Client-side Form Validation ──────────────────────────
+    const form = document.getElementById('prediction-form');
+    const btnPredict = document.getElementById('predict-btn');
+
+    function clearErrors() {
+      document.querySelectorAll('.field-error').forEach(el => el.textContent = '');
+      document.querySelectorAll('.form-input').forEach(el => el.classList.remove('input-error'));
+    }
+
+    function showError(fieldId, errId, msg) {
+      const field = document.getElementById(fieldId);
+      const err   = document.getElementById(errId);
+      if (field) field.classList.add('input-error');
+      if (err)   err.textContent = msg;
+    }
+
+    form.addEventListener('submit', (e) => {
+      clearErrors();
+      let valid = true;
+
+      const presentPrice = parseFloat(document.getElementById('present_price').value);
+      const carAge       = parseInt(document.getElementById('car_age').value);
+      const kmsDriven    = parseFloat(document.getElementById('kms_driven').value);
+      const ownerVal     = document.getElementById('owner').value;
+
+      if (isNaN(presentPrice) || presentPrice <= 0) {
+        showError('present_price', 'err-present-price', 'Please enter a valid showroom price (> 0).');
+        valid = false;
+      }
+      if (isNaN(carAge) || carAge < 0 || carAge > 50) {
+        showError('car_age', 'err-car-age', 'Car age must be between 0 and 50 years.');
+        valid = false;
+      }
+      if (isNaN(kmsDriven) || kmsDriven < 0) {
+        showError('kms_driven', 'err-kms', 'Kilometres driven must be 0 or more.');
+        valid = false;
+      }
+      if (!ownerVal) {
+        document.getElementById('err-owner').textContent = 'Please select number of previous owners.';
+        valid = false;
+      }
+
+      if (!valid) {
+        e.preventDefault();
+        return;
+      }
+
+      // Loading state
+      btnPredict.classList.add('loading');
+      btnPredict.disabled = true;
+    });
+
+    // ── Auto-scroll to result on page load ───────────────────
+    const resultCard = document.getElementById('result-card');
+    if (resultCard) {
+      setTimeout(() => {
+        resultCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 300);
+
+      // Animate price counter
+      const resultEl = document.getElementById('result-value');
+      if (resultEl) {
+        const target = parseFloat(resultEl.textContent);
+        let current  = 0;
+        const step   = target / 60;
+        const timer  = setInterval(() => {
+          current += step;
+          if (current >= target) {
+            current = target;
+            clearInterval(timer);
+          }
+          resultEl.textContent = current.toFixed(2);
+        }, 16);
+      }
+    }
+  </script>
+
+</body>
+</html>
