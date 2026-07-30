@@ -170,23 +170,52 @@ curl -X POST http://localhost:5000/api/predict \
 
 ---
 
-## 📊 EDA Plots Generated
+## 📊 EDA Plots Generated (Walkthrough)
 
-| # | File | Description |
-|---|------|-------------|
-| 01 | `histograms.png` | Frequency distribution of all numerical features |
-| 02 | `distributions.png` | KDE density plots for each feature |
-| 03 | `boxplots.png` | Outlier detection via box plots |
-| 04 | `count_plots.png` | Category counts (Fuel, Seller, Transmission) |
-| 05 | `pie_charts.png` | Proportional share of each category |
-| 06 | `pairplot.png` | Pairwise feature relationships |
-| 07 | `scatter_plots.png` | Selling Price vs Present_Price, Kms, Car_Age |
-| 08 | `correlation_heatmap.png` | Pearson correlation matrix |
-| 09 | `feature_importance.png` | RF feature importance scores |
-| 10 | `model_comparison.png` | R² comparison across 4 models |
-| 11 | `actual_vs_predicted.png` | Predicted vs actual price scatter |
-| 12 | `residual_plot.png` | Residual distribution and scatter |
-| 13 | `prediction_error.png` | % error per sample + CDF |
+Here is a visual walkthrough of the Exploratory Data Analysis and Model Evaluation:
+
+### 1. Data Distributions & Outliers
+**Histograms**  
+![Frequency distribution](outputs/plots/01_histograms.png)
+
+**KDE Distributions**  
+![KDE density plots](outputs/plots/02_distributions.png)
+
+**Boxplots**  
+![Outlier detection](outputs/plots/03_boxplots.png)
+
+### 2. Categorical Features
+**Count Plots**  
+![Category counts](outputs/plots/04_count_plots.png)
+
+**Pie Charts**  
+![Proportional share](outputs/plots/05_pie_charts.png)
+
+### 3. Feature Relationships
+**Pairplot**  
+![Pairwise relationships](outputs/plots/06_pairplot.png)
+
+**Scatter Plots**  
+![Selling Price vs Features](outputs/plots/07_scatter_plots.png)
+
+**Correlation Heatmap**  
+![Pearson correlation](outputs/plots/08_correlation_heatmap.png)
+
+### 4. Model Performance & Evaluation
+**Feature Importance (Random Forest)**  
+![Feature importance](outputs/plots/09_feature_importance.png)
+
+**Model Comparison**  
+![R2 comparison](outputs/plots/10_model_comparison.png)
+
+**Actual vs Predicted**  
+![Actual vs Predicted](outputs/plots/11_actual_vs_predicted.png)
+
+**Residual Plot**  
+![Residual Plot](outputs/plots/12_residual_plot.png)
+
+**Prediction Error**  
+![Prediction Error](outputs/plots/13_prediction_error.png)
 
 ---
 
@@ -234,17 +263,7 @@ Output:
   Estimated Selling Price : ₹ 7.25 Lakhs
 ```
 
----
 
-## 📸 Screenshots
-
-| Page | Screenshot |
-|------|-----------|
-| Home / Form | `screenshots/home.png` |
-| Prediction Result | `screenshots/prediction.png` |
-| EDA Graphs | `screenshots/graphs.png` |
-
----
 
 ## 🔮 Future Improvements
 
